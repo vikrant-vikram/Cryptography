@@ -1,10 +1,5 @@
 
 
-# ASCII Table
-
-
-
-
 # Dec  Char                           Dec  Char     Dec  Char     Dec  Char
 # ---------                           ---------     ---------     ----------
 #   0  NUL (null)                      32  SPACE     64  @         96  `
@@ -39,16 +34,7 @@
 #  29  GS  (group separator)           61  =         93  ]        125  }
 #  30  RS  (record separator)          62  >         94  ^        126  ~
 #  31  US  (unit separator)            63  ?         95  _        127  DEL
-#
-#
-#
 
-
-
-
-# from _typeshed import ConvertibleToInt
-# from io import IncrementalNewlineDecoder
-# import random
 MOD_VALUE = 26
 
 
