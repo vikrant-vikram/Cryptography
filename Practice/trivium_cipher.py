@@ -1,27 +1,43 @@
 
 
 
-# # for 𝑖=1to𝑁
-# #   do
-#     # 𝑡1 ← 𝑠66 + 𝑠93
-#     # 𝑡2 ← 𝑠162 + 𝑠177
-#     # 𝑡3 ← 𝑠243 + 𝑠288
-#     # 𝑧𝑖 ← 𝑡1 + 𝑡2 + 𝑡3
-#     # 𝑡1 ←𝑡1 +𝑠91 ⋅𝑠92 +𝑠171
-#     # 𝑡2 ←𝑡2 +𝑠175 ⋅𝑠176 +𝑠264
-#     # 𝑡3 ←𝑡3 +𝑠286 ⋅𝑠287 + 𝑠69
-#     # (𝑠1,𝑠2,...,𝑠93) ← (𝑡3,𝑠1,...,𝑠92)
-#     # (𝑠94,𝑠95,...,𝑠177) ← (𝑡1,𝑠94,...,𝑠176)
-#     # (𝑠178,𝑠179,...,𝑠288) ← (𝑡2,𝑠178,...,𝑠287)
-
-
 
 # # The Trivium cryptography method has 288 bit states and uses three registers
 # # (A, B and C), of 93, 84 and 111 bits. The method for each state is:
 #     #
-# # Contannt Field
+#
+#
+#
+# Conevert iv and key to bits -> reversed bits of key and IV -> Loaded register
+#  as
+#  (1,2,., 93) <- (K3,..., K80,0, ..., 0)
+#  (94, 95,.,177) <- (IV1,..., IV80, 0,..., 0)
+#  (178, 179, .., 288) <- (0,..., 0,1,1,1)
 
 
+#  The state is rotated over 4 full cycles after the loading of key and IV.
+#  4 full cycles means 4 ∗ 288 = 1152 clock cycles.
+#
+# perform as it is
+#
+#
+#
+# for 𝑖=1to𝑁
+#   do
+    # 𝑡1 ← 𝑠66 + 𝑠93
+    # 𝑡2 ← 𝑠162 + 𝑠177
+    # 𝑡3 ← 𝑠243 + 𝑠288
+    # 𝑧𝑖 ← 𝑡1 + 𝑡2 + 𝑡3
+    # 𝑡1 ←𝑡1 +𝑠91 ⋅𝑠92 +𝑠171
+    # 𝑡2 ←𝑡2 +𝑠175 ⋅𝑠176 +𝑠264
+    # 𝑡3 ←𝑡3 +𝑠286 ⋅𝑠287 + 𝑠69
+    # (𝑠1,𝑠2,...,𝑠93) ← (𝑡3,𝑠1,...,𝑠92)
+    # (𝑠94,𝑠95,...,𝑠177) ← (𝑡1,𝑠94,...,𝑠176)
+    # (𝑠178,𝑠179,...,𝑠288) ← (𝑡2,𝑠178,...,𝑠287)
+
+
+
+# Dictionary for decimal_to_hex conversion
 decimal_to_hex = {
     0: '0', 1: '1', 2: '2', 3: '3', 4: '4',
     5: '5', 6: '6', 7: '7', 8: '8', 9: '9',
@@ -31,18 +47,23 @@ decimal_to_hex = {
 
 
 
+
+# Contannt Field
+#
+# Base Values for each refister means r2[0]-> s94 r2[1]->s95 and so on also for r3
 r1_base = 1
 r2_base = 94
 r3_base = 178
+
+# Capacity of each register
 r1_cap = 93
 r2_cap = 84
 r3_cap = 111
 #Registers
 
 
-
+# def converter(val): and def bigIndianLittleIndianConverter(data): -> have been used to Convert  result from little indian to big indian
 def converter(val):
-    print(val)
     ans = ""
     for i in range(0,int(len(val)/4)):
         temp = val[i*4: (i+1)*4]
@@ -52,13 +73,33 @@ def converter(val):
         ans+=decimal_to_hex[temp]
     return ans
 
+def bigIndianLittleIndianConverter(data):
+    ans = data[1]+data[0]+ data[3]+ data[2]
+    return ans[::-1]
 
+
+
+
+
+
+# def hexToBin(hex_string, reg): -> have been used to Create to convert Hex to Binary
 
 def hexToBin(hex_string, reg):
     integer_value = int(hex_string, 16)
     binary_string = format(integer_value, f'0{reg}b')
     return binary_string[::-1]
 
+
+
+
+
+#Loader Loads the Key and IV values to the register
+# Conevert iv and key to bits -> reversed bits of key and IV -> Loaded register
+#  as
+#  (1,2,., 93) <- (K3,..., K80,0, ..., 0)
+#  (94, 95,.,177) <- (IV1,..., IV80, 0,..., 0)
+#  (178, 179, .., 288) <- (0,..., 0,1,1,1)
+#
 def loader(key, IV, r1, r2, r3):
     bin_key = str(hexToBin(key, 80))
     bin_iv = str(hexToBin(IV, 80))
@@ -70,7 +111,7 @@ def loader(key, IV, r1, r2, r3):
 
 
     counter = 0
-    for k in bin_key:
+    for k in bin_key[2:]:
         k = int(k)
         r1[counter] = k
         counter+=1
@@ -83,14 +124,24 @@ def loader(key, IV, r1, r2, r3):
     r3[-2] = 1
     r3[-3] = 1
 
-    print(''.join(str(x) for x in r1), ''.join(str(x) for x in r2), ''.join(str(x) for x in r3))
+    # print(''.join(str(x) for x in r1), ''.join(str(x) for x in r2), ''.join(str(x) for x in r3))
     return r1, r2, r3
 
 
 
-def xnor(a, b):
-    return a&b
 
+# def keyStreamGenerator(r1, r2,  r3):-> does following job
+# 𝑡1 ← 𝑠66 + 𝑠93
+# 𝑡2 ← 𝑠162 + 𝑠177
+# 𝑡3 ← 𝑠243 + 𝑠288
+# 𝑧𝑖 ← 𝑡1 + 𝑡2 + 𝑡3
+# 𝑡1 ←𝑡1 +𝑠91 ⋅𝑠92 +𝑠171
+# 𝑡2 ←𝑡2 +𝑠175 ⋅𝑠176 +𝑠264
+# 𝑡3 ←𝑡3 +𝑠286 ⋅𝑠287 + 𝑠69
+# (𝑠1,𝑠2,...,𝑠93) ← (𝑡3,𝑠1,...,𝑠92)
+# (𝑠94,𝑠95,...,𝑠177) ← (𝑡1,𝑠94,...,𝑠176)
+# (𝑠178,𝑠179,...,𝑠288) ← (𝑡2,𝑠178,...,𝑠287)
+# and return update r1, r2, and r3
 
 def keyStreamGenerator(r1, r2,  r3):
 
@@ -100,9 +151,9 @@ def keyStreamGenerator(r1, r2,  r3):
 
     z = t1 ^ t2 ^ t3
 
-    t1 = t1 ^ xnor(r1[ 91 - r1_base], r1[ 92 - r1_base]) ^ r2 [171 - r2_base]
-    t2 = t2 ^ xnor(r2[175 - r2_base],r2[176 - r2_base] ) ^ r3[264 - r3_base]
-    t3 = t3 ^ xnor( r3[286 - r3_base],r3[287 - r3_base] ) ^ r1[ 69 - r1_base]
+    t1 = t1 ^ (r1[ 91 - r1_base] & r1[ 92 - r1_base]) ^ r2 [171 - r2_base]
+    t2 = t2 ^ (r2[175 - r2_base] & r2[176 - r2_base] ) ^ r3[264 - r3_base]
+    t3 = t3 ^ ( r3[286 - r3_base] & r3[287 - r3_base] ) ^ r1[ 69 - r1_base]
 
     temp1 = [t3]
     temp1.extend(r1[:-1])
@@ -112,6 +163,14 @@ def keyStreamGenerator(r1, r2,  r3):
     temp3.extend(r3[:-1])
     return z, temp1, temp2, temp3
 
+
+
+# def genrate(key, iv): Have followinf task
+# run def keyStreamGenerator(r1, r2,  r3): for 4*288 times as worm up
+# then
+# for 𝑖=1to𝑁
+#  to generate keystream bits
+#
 def genrate(key, iv):
     r1 = [ 0 for i in range(93)]
     r2 = [ 0 for i in range(84)]
@@ -120,20 +179,14 @@ def genrate(key, iv):
     keyStream = ""
     for i in range(4*288) :
         k, r1, r2, r3 = keyStreamGenerator(r1, r2, r3)
-
     for i in range(512):
         k, r1, r2, r3 = keyStreamGenerator(r1, r2, r3)
         keyStream+=str(k)
-
-
     return converter(keyStream)
-    # return keyStream
 
 
 
-def bigIndianLittleIndianConverter(data):
-    ans = data[1]+data[0]+ data[3]+ data[2]
-    return ans[::-1]
+
 
 
 
