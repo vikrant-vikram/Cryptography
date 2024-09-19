@@ -233,13 +233,13 @@ bits_Rotation_table = [1, 1, 2,	2, 2, 2, 2,	2,	1, 2,	2,	2,	2,	2,	2,	1]
 
 
 key_compression_table = [
-    1,	2,	3,	4,	5,	6,	7,	8,
-    1,	14,	17,	11,	24,	01,	05,	03,	28,
-    2,	15,	06,	21,	10,	23,	19,	12,	04,
-    3,  26,	08,	16,	07,	27,	20,	13,	02,
-    4,	41,	52,	31,	37,	47,	55,	30,	40,
-    5,	51,	45,	33,	48,	44,	49,	39,	56,
-    6,	34,	53,	46,	42,	50,	36,	29,	32
+
+    14,	17,	11,	24,	01,	05,	03,	28,
+    15,	06,	21,	10,	23,	19,	12,	04,
+    26,	08,	16,	07,	27,	20,	13,	02,
+    41,	52,	31,	37,	47,	55,	30,	40,
+    51,	45,	33,	48,	44,	49,	39,	56,
+    34,	53,	46,	42,	50,	36,	29,	32
 ]
 
 
@@ -251,6 +251,10 @@ decimal_to_hex = {
 }
 
 
+
+
+
+
 def rotate_left( l:list[int], times:int) -> list[int]:
     temp = []
     for i in range(times):
@@ -259,19 +263,35 @@ def rotate_left( l:list[int], times:int) -> list[int]:
         l = temp
     return l
 
+def key_copression(first_28_bits : list[int], last_28_bits:list[int]) -> list[int]:
+
+    total = []
+    compressed_key = []
+    total.extend(first_28_bits)
+    total.extend(last_28_bits)
+    for i in key_compression_table:
+        temp = i-1
+        compressed_key.append(total[temp])
+    return compressed_key
 
 
 
-def keyGeneration(key: list[int], round) -> list[int]:
-
+def keyGeneration(key: list[int]) -> list[list[int]]:
+    list_of_key =[]
     counter = 0
+    # 2.Priority Drop -> 64bit to 56 bit using Priority Drop Table
     after_drop_and_permutation = [0 for i in range(56)]
     for i in key_permutation_table:
         after_drop_and_permutation[counter] = key[i]
         counter+=1
+    # 3. Devide 56 bits into 28 28 bits
     first_28_bits = after_drop_and_permutation[:28]
     last_28_bits = after_drop_and_permutation[28:]
-    first_28_bits = rotate_left(first_28_bits, bits_Rotation_table[round] )
-    last_28_bits = rotate_left(first_28_bits, bits_Rotation_table[round] )
 
-    return []
+    for round in range(1,17):
+        # 4.Left Shift
+        first_28_bits = rotate_left(first_28_bits, bits_Rotation_table[round] )
+        last_28_bits = rotate_left(first_28_bits, bits_Rotation_table[round] )
+        # 5. Compression of key 28+28 -> 48
+        list_of_key.append(key_copression(first_28_bits, last_28_bits))
+    return list_of_key
