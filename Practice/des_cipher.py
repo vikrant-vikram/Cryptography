@@ -123,6 +123,10 @@
 #
 
 
+# from firstSem.CRYPTO.Assignment.trivium_cipher import converter
+
+av = []
+
 base = 1
 
 IP = [  58, 50, 42, 34, 26,  18, 10, 2,
@@ -146,14 +150,14 @@ IP_1 = [40,	8,	48,	16,	56,	24,	64,	32,
         33,	1,	41,	9,	49,	17,	57,	25
         ]
 E = [
-    32, 1,	2,	3,	4,	5,
-    4,	5,	6,	7,	8,	9,
-    8,	9,	10,	11,	12,	13,
-    12,	13,	14,	15,	16,	17,
-    16,	17,	18,	19,	20,	21,
-    20,	21,	22,	23,	24,	25,
-    24,	25,	26,	27,	28,	29,
-    28,	29,	30,	31,	32,	1
+        32, 1,	2,	3,	4,	5,
+        4,	5,	6,	7,	8,	9,
+        8,	9,	10,	11,	12,	13,
+        12,	13,	14,	15,	16,	17,
+        16,	17,	18,	19,	20,	21,
+        20,	21,	22,	23,	24,	25,
+        24,	25,	26,	27,	28,	29,
+        28,	29,	30,	31,	32,	1
     ]
 
 
@@ -237,9 +241,9 @@ bits_Rotation_table = [1, 1, 2,	2, 2, 2, 2,	2,	1, 2,	2,	2,	2,	2,	2,	1]
 
 key_compression_table = [
 
-    14,	17,	11,	24,	01,	05,	03,	28,
-    15,	06,	21,	10,	23,	19,	12,	04,
-    26,	08,	16,	07,	27,	20,	13,	02,
+    14,	17,	11,	24,	1,	5,	3,	28,
+    15,	6,	21,	10,	23,	19,	12,	4,
+    26,	8,	16,	7,	27,	20,	13,	2,
     41,	52,	31,	37,	47,	55,	30,	40,
     51,	45,	33,	48,	44,	49,	39,	56,
     34,	53,	46,	42,	50,	36,	29,	32
@@ -256,6 +260,29 @@ decimal_to_hex = {
 
 int_to_bin = ['0000', '0001', '0010', '0011', '0100', '0101', '0110', '0111',
  '1000', '1001', '1010', '1011', '1100', '1101', '1110', '1111']
+
+binary_to_hex = {
+    '0000': '0', '0001': '1', '0010': '2', '0011': '3', '0100': '4',
+    '0101': '5', '0110': '6', '0111': '7', '1000': '8', '1001': '9',
+    '1010': 'A', '1011': 'B', '1100': 'C', '1101': 'D', '1110': 'E', '1111': 'F'
+}
+
+hex_to_binary = {
+    '0': '0000', '1': '0001', '2': '0010', '3': '0011', '4': '0100',
+    '5': '0101', '6': '0110', '7': '0111', '8': '1000', '9': '1001',
+    'A': '1010', 'B': '1011', 'C': '1100', 'D': '1101', 'E': '1110', 'F': '1111'
+}
+
+
+def converter_binary_to_hex( l :list[int])-> str:
+    hex_string = ""
+    for i in range(len(l)//4):
+        bit = i*4
+        binary_string = str(l[bit])+ str(l[bit + 1]) + str(l[bit + 2]) + str(l[bit + 3])
+        # print(binary_string)
+        hex_string+=binary_to_hex[binary_string]
+    return hex_string
+
 
 
 
@@ -286,16 +313,16 @@ def keyGeneration(key: list[int]) -> list[list[int]]:
     # 2.Priority Drop -> 64bit to 56 bit using Priority Drop Table
     after_drop_and_permutation = [0 for i in range(56)]
     for i in key_permutation_table:
-        after_drop_and_permutation[counter] = key[i]
+        after_drop_and_permutation[counter] = key[i-1]
         counter+=1
     # 3. Devide 56 bits into 28 28 bits
     first_28_bits = after_drop_and_permutation[:28]
     last_28_bits = after_drop_and_permutation[28:]
 
-    for round in range(1,17):
+    for round in range(16):
         # 4.Left Shift
         first_28_bits = rotate_left(first_28_bits, bits_Rotation_table[round] )
-        last_28_bits = rotate_left(first_28_bits, bits_Rotation_table[round] )
+        last_28_bits = rotate_left(last_28_bits, bits_Rotation_table[round] )
         # 5. Compression of key 28+28 -> 48
         list_of_key.append(key_copression(first_28_bits, last_28_bits))
     return list_of_key
@@ -325,43 +352,129 @@ def des_round_function(r1 : list[int], round_key:list[int]) -> list[int]:
     for i in range(8):
         lookup = result_of_xor[i*6: (i+1)*8]
 
-        int('11111111', 2)
+        # int('11111111', 2)
         row = int(str(lookup[0])+ str(lookup[-1]), 2)
         col = int( str(lookup[1]) + str(lookup[2]) + str(lookup[3]) + str(lookup[4]), 2)
 
         val = sbox[i][row][col]
         binary_string+=int_to_bin[val]
 
-    return list(map(int, binary_string.split("")))
+    return list(map(int, list(binary_string)))
 
 
 
-def DES(plainText:list[int] , key: list[int])-> list[int]:
+def DES(plainText:list[int] , key: list[int]):
+    result1 = []
     encrypted_block = []
+    # 1. Initial Permutation
     plain_text_after_permutation = []
     for i in IP:
         temp = i-1
         plain_text_after_permutation.append(plainText[temp])
+    # 2 . Generate Round Keys
     round_keys = keyGeneration(key)
+    # 3. Devide 64 bits into two 32 bit blocks
     l_first_32_bits = plain_text_after_permutation[:32]
     r_last_32_bits = plain_text_after_permutation[32:]
+    print(" Plaint Text After Permutation : " , converter_binary_to_hex(plain_text_after_permutation))
     for i in range(16):
+        # 4. Pass Right 32 bits and respective Round Keys
         result = des_round_function(r_last_32_bits, round_keys[i])
+        print("L: " , converter_binary_to_hex(l_first_32_bits)," R : ", converter_binary_to_hex(r_last_32_bits), " Key : ", converter_binary_to_hex(round_keys[i]))
         temp = r_last_32_bits
+        # 5. XOR the Result of DES round Function and First 32 bits
+        # 6. Store the XOR result in R and R into L
         r_last_32_bits = xor(result, l_first_32_bits)
         l_first_32_bits = temp
+
+
+        round_i_result = []
+        round_i_result.extend(l_first_32_bits)
+        round_i_result.extend(r_last_32_bits)
+        result1.append(round_i_result)
+    av.append(result1)
+    # Do 4 5 and 6th Steps 16 times in total
     # cipherText.extend(l_first_32_bits)
     l_first_32_bits.extend(r_last_32_bits)
     total  = l_first_32_bits
+
+    # print("Total len :" , len(total))
+    # 7. On the result use Final Permutation
     for i in IP_1:
+        # print(i)
         temp = i-1
-        encrypted_block.append(total[i])
+        encrypted_block.append(total[temp])
+    # 8. Return the Result
     return encrypted_block
 
 
+
+# function converts each character of the input string to its 4-bit binary representation
+def string_to_4bit_binary(input_string : str) -> list[int]:
+    binary_list = []
+    for char in input_string:
+        binary_list.extend(list(map(int,list(hex_to_binary[char]))))
+    return binary_list
+
+
+
+
+
+#This function takes PlainText:Hexadecimal and Key:Hexadecimal then convert it into blocks and pass it to the DES
 def encrypt(plaintext:str, key:str)->str:
     cipherText =""
-
-
-
+    plaintext_binary = string_to_4bit_binary(plaintext)
+    key_binary = string_to_4bit_binary(key)
+    cipher_binary = []
+    for i in range(len(plaintext_binary)//64):
+        cipher_binary.extend(DES(plaintext_binary[i*64: (i+1)*64], key_binary))
+    cipherText = converter_binary_to_hex(cipher_binary)
+    # for bit in range(len(cipher_binary)//4):
+    #     binary_string = str(cipher_binary[bit])+ str(cipher_binary[bit + 1]) + str(cipher_binary[bit + 2]) + str(cipher_binary[bit + 3])
+    #     cipherText+=binary_to_hex[binary_string]
     return cipherText
+
+print(encrypt(input(),input()))
+print(encrypt(input(),input()))
+
+first = av[0]
+second = av[1]
+print("Avalanche Property")
+print("Rounds     Bit differences")
+for i in range(len(first)):
+    temp1 = first[i]
+    temp2 = second[i]
+    print( i+1 , "\t\t" , sum(xor(temp1, temp2)))
+
+
+
+
+
+
+# Plaintext: 123456ABCD132536        Key: AABB09182736CCDD          CipherText: C0B7A8D05F3A829C
+
+# -----------------------------------------------------------------------------------------------------------------------------------------------------
+# After initial permutation:14A7D67818CA18AD
+# After splitting: L0=14A7D678         R0=18CA18AD
+
+# Round       Left                  Right                  Round Key
+
+# 1          18CA18AD        5A78E394         194CD072DE8C
+# ........................................................................................
+# ........................................................................................
+# .......................................................................................
+# 16         19BA9212        CF26B472         181C5D75C66D
+
+# Ciphertext: C0B7A8D05F3A829C (after final permutation)
+
+
+
+# Example for Avalanche Property (as you can see there is a difference in only one bit of the plaintext)
+# Plaintext: 0000000000000000       Key: 22234512987ABB23    Ciphertext: 4789FD476E82A5F1
+
+# Plaintext: 0000000000000001       Key: 22234512987ABB23    Ciphertext: 0A4ED5C15A63FEA3
+
+
+# Then in this case you should observe the changes in the following number of bits in each round as described below:
+# Rounds:                 1    2    3     4    5    6    7    8    9    10    11    12    13    14    15    16
+# Bit differences:     1   6   20   29  30  33  32  29  32  39    33    28     30    31    30    29
