@@ -376,11 +376,11 @@ def DES(plainText:list[int] , key: list[int]):
     # 3. Devide 64 bits into two 32 bit blocks
     l_first_32_bits = plain_text_after_permutation[:32]
     r_last_32_bits = plain_text_after_permutation[32:]
-    print(" Plaint Text After Permutation : " , converter_binary_to_hex(plain_text_after_permutation))
+    print("After Permutation : " , converter_binary_to_hex(plain_text_after_permutation))
     for i in range(16):
         # 4. Pass Right 32 bits and respective Round Keys
         result = des_round_function(r_last_32_bits, round_keys[i])
-        print("L: " , converter_binary_to_hex(l_first_32_bits)," R : ", converter_binary_to_hex(r_last_32_bits), " Key : ", converter_binary_to_hex(round_keys[i]))
+        print("L"+str(i),": ", converter_binary_to_hex(l_first_32_bits),"\t\tR" + str(i), ": ", converter_binary_to_hex(r_last_32_bits), "\t\tKey : ", converter_binary_to_hex(round_keys[i]))
         temp = r_last_32_bits
         # 5. XOR the Result of DES round Function and First 32 bits
         # 6. Store the XOR result in R and R into L
@@ -434,17 +434,46 @@ def encrypt(plaintext:str, key:str)->str:
     #     cipherText+=binary_to_hex[binary_string]
     return cipherText
 
-print(encrypt(input(),input()))
-print(encrypt(input(),input()))
 
-first = av[0]
-second = av[1]
-print("Avalanche Property")
-print("Rounds     Bit differences")
-for i in range(len(first)):
-    temp1 = first[i]
-    temp2 = second[i]
-    print( i+1 , "\t\t" , sum(xor(temp1, temp2)))
+
+
+def avalanche():
+    plainText = input("Plaintext : ")
+    key = input("Key : ")
+
+    encrypt(plainText,key)
+    encrypt(plainText,key)
+
+    first = av[0]
+    second = av[1]
+    print("Avalanche Property")
+    print("Rounds     Bit differences")
+    for i in range(len(first)):
+        temp1 = first[i]
+        temp2 = second[i]
+        print( i+1 , "\t\t" , sum(xor(temp1, temp2)))
+
+
+
+def handler():
+    print("===========================[ Data Encryption Standard ]==============================")
+    print("Choose an option")
+    print("1. DES Encryption")
+    print("2. Avalanche Property")
+    option = int(input())
+    if(option == 1):
+
+        plainText = input("Plaintext : ")
+        key = input("Key : ")
+        encrypt(plainText,key)
+
+    elif(option == 2):
+        avalanche()
+    else:
+        print("Choose Vailid Option")
+
+handler()
+
 
 
 
