@@ -125,6 +125,8 @@
 
 # from firstSem.CRYPTO.Assignment.trivium_cipher import converter
 
+
+
 av = []
 
 base = 1
@@ -250,6 +252,14 @@ key_compression_table = [
 ]
 
 
+per = [16, 7, 20, 21,
+	29, 12, 28, 17,
+	1, 15, 23, 26,
+	5, 18, 31, 10,
+	2, 8, 24, 14,
+	32, 27, 3, 9,
+	19, 13, 30, 6,
+	22, 11, 4, 25]
 
 decimal_to_hex = {
     0: '0', 1: '1', 2: '2', 3: '3', 4: '4',
@@ -285,13 +295,16 @@ def converter_binary_to_hex( l :list[int])-> str:
 
 
 
-
 def rotate_left( l:list[int], times:int) -> list[int]:
+    # return list(map(int,shift_left("".join(map(str,l)),times).split()))
+    # print("".join(map(str,l)), times)
     temp = []
     for i in range(times):
         temp.extend(l[1:])
         temp.append(l[0])
         l = temp
+        temp= []
+    # print("".join(map(str,l)))
     return l
 
 def key_copression(first_28_bits : list[int], last_28_bits:list[int]) -> list[int]:
@@ -329,7 +342,7 @@ def keyGeneration(key: list[int]) -> list[list[int]]:
 
 
 
-
+# Rerturn xor of two binary list as list
 def xor(l1:list[int] , l2:list[int])-> list[int]:
     result = []
     for i in range(len(l1)):
@@ -337,6 +350,11 @@ def xor(l1:list[int] , l2:list[int])-> list[int]:
     return result
 
 
+def permute(k, arr, n):
+	permutation = ""
+	for i in range(0, n):
+		permutation = permutation + k[arr[i] - 1]
+	return permutation
 
 
 def des_round_function(r1 : list[int], round_key:list[int]) -> list[int]:
@@ -345,21 +363,29 @@ def des_round_function(r1 : list[int], round_key:list[int]) -> list[int]:
         temp = i-1
         expanded_r1.append(r1[temp])
     result_of_xor = xor(expanded_r1, round_key)
+    # print("".join(list(map(str,result_of_xor))))
+
+
     # for i in range(48):
     #     result_of_xor.append(expanded_r1[i] ^ [i])
 
     binary_string = ""
     for i in range(8):
-        lookup = result_of_xor[i*6: (i+1)*8]
+        # print(i*6, (i+1)*6)
+        lookup = result_of_xor[i*6: (i+1)*6]
 
         # int('11111111', 2)
+        # print(lookup)
         row = int(str(lookup[0])+ str(lookup[-1]), 2)
         col = int( str(lookup[1]) + str(lookup[2]) + str(lookup[3]) + str(lookup[4]), 2)
 
         val = sbox[i][row][col]
+        # print(val)
         binary_string+=int_to_bin[val]
+    sbox_str = permute(binary_string, per, 32)
+    # print("binary_string",binary_string)
 
-    return list(map(int, list(binary_string)))
+    return list(map(int, list(sbox_str)))
 
 
 
@@ -376,19 +402,25 @@ def DES(plainText:list[int] , key: list[int]):
     # 3. Devide 64 bits into two 32 bit blocks
     l_first_32_bits = plain_text_after_permutation[:32]
     r_last_32_bits = plain_text_after_permutation[32:]
-    print("After Permutation : " , converter_binary_to_hex(plain_text_after_permutation))
+    print("After initial Permutation : " , converter_binary_to_hex(plain_text_after_permutation))
+    print("After splitting: L0: ",converter_binary_to_hex(l_first_32_bits), "R0 : ",converter_binary_to_hex(r_last_32_bits ))
+    print("Left                         Right                     Round Key")
+
     for i in range(16):
         # 4. Pass Right 32 bits and respective Round Keys
         result = des_round_function(r_last_32_bits, round_keys[i])
-        print("L"+str(i),": ", converter_binary_to_hex(l_first_32_bits),"\t\tR" + str(i), ": ", converter_binary_to_hex(r_last_32_bits), "\t\tKey : ", converter_binary_to_hex(round_keys[i]))
+
         temp = r_last_32_bits
         # 5. XOR the Result of DES round Function and First 32 bits
         # 6. Store the XOR result in R and R into L
         r_last_32_bits = xor(result, l_first_32_bits)
         l_first_32_bits = temp
-
-
         round_i_result = []
+        if(i == 15):
+            # print("Swap")
+            l_first_32_bits , r_last_32_bits = r_last_32_bits, l_first_32_bits
+        print("L"+str(i+1),": ", converter_binary_to_hex(l_first_32_bits),"\t\tR" + str(i+1), ": ", converter_binary_to_hex(r_last_32_bits), "\t\tKey : ", converter_binary_to_hex(round_keys[i]))
+
         round_i_result.extend(l_first_32_bits)
         round_i_result.extend(r_last_32_bits)
         result1.append(round_i_result)
@@ -440,9 +472,11 @@ def encrypt(plaintext:str, key:str)->str:
 def avalanche():
     plainText = input("Plaintext : ")
     key = input("Key : ")
+    print("Cipher text : ",encrypt(plainText,key))
 
-    encrypt(plainText,key)
-    encrypt(plainText,key)
+    plainText = input("Plaintext : ")
+    key = input("Key : ")
+    print("Cipher text : ",encrypt(plainText,key))
 
     first = av[0]
     second = av[1]
@@ -456,54 +490,24 @@ def avalanche():
 
 
 def handler():
-    print("===========================[ Data Encryption Standard ]==============================")
+    print("\033[93m"+"===========================[ Data Encryption Standard ]==============================")
+    print("Input Should be in HEXA")
+    print("\033[96m")
     print("Choose an option")
     print("1. DES Encryption")
     print("2. Avalanche Property")
     option = int(input())
     if(option == 1):
-
         plainText = input("Plaintext : ")
         key = input("Key : ")
-        encrypt(plainText,key)
+        # plainText = "123456ABCD132536"
+        # key = "AABB09182736CCDD"
+
+
+        print("Cipher text : ",encrypt(plainText,key))
 
     elif(option == 2):
         avalanche()
     else:
         print("Choose Vailid Option")
-
 handler()
-
-
-
-
-
-
-
-# Plaintext: 123456ABCD132536        Key: AABB09182736CCDD          CipherText: C0B7A8D05F3A829C
-
-# -----------------------------------------------------------------------------------------------------------------------------------------------------
-# After initial permutation:14A7D67818CA18AD
-# After splitting: L0=14A7D678         R0=18CA18AD
-
-# Round       Left                  Right                  Round Key
-
-# 1          18CA18AD        5A78E394         194CD072DE8C
-# ........................................................................................
-# ........................................................................................
-# .......................................................................................
-# 16         19BA9212        CF26B472         181C5D75C66D
-
-# Ciphertext: C0B7A8D05F3A829C (after final permutation)
-
-
-
-# Example for Avalanche Property (as you can see there is a difference in only one bit of the plaintext)
-# Plaintext: 0000000000000000       Key: 22234512987ABB23    Ciphertext: 4789FD476E82A5F1
-
-# Plaintext: 0000000000000001       Key: 22234512987ABB23    Ciphertext: 0A4ED5C15A63FEA3
-
-
-# Then in this case you should observe the changes in the following number of bits in each round as described below:
-# Rounds:                 1    2    3     4    5    6    7    8    9    10    11    12    13    14    15    16
-# Bit differences:     1   6   20   29  30  33  32  29  32  39    33    28     30    31    30    29
