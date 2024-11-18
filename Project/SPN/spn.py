@@ -7,7 +7,12 @@ def random_4bit_string()-> str:
     print("key:",temp)
     return temp
 
-
+def key_generator(main_key):
+    key = []
+    for i in range(6):
+        print(4*i,(4*i)+16)
+        key.append(main_key[4*i:(4*i)+16])
+    return key
 
 #
 def substitution(temp):
@@ -33,21 +38,22 @@ def permutation(temp):
     perm = [temp[spn_supp.pbox[i]] for i in range(16)]
     return perm
 
-def key_mixing(temp):
-    k = random_4bit_string()
-    return ''.join(str(int(b1) ^ int(b2)) for b1, b2 in zip(k, temp))
+def key_mixing(temp,key):
+    # k = random_4bit_string()
+    return ''.join(str(int(b1) ^ int(b2)) for b1, b2 in zip(key, temp))
 
 
-def spn(msg):
-
+def spn(msg, main_key):
+    key = key_generator(main_key)
+    print(key)
     state = msg
     for i in range(3):
         print("Level : ", i+1, end=" \t ")
-        state = key_mixing(state)
+        state = key_mixing(state,key[i])
         state = substitution(state)
         state = permutation(state)
-    state = key_mixing(state)
+    state = key_mixing(state, key[4])
     state = substitution(state)
-    state = key_mixing(state)
+    state = key_mixing(state,key[5])
 
     return ''.join(state)
