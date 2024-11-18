@@ -1,18 +1,15 @@
 import random
 import spn_supplymentary as spn_supp
+import basic_methods as bm
 
 
-def random_4bit_string()-> str:
-    temp = ''.join(random.choice('01') for _ in range(16))
-    print("key:",temp)
-    return temp
-
-def key_generator(main_key):
+def key_generator(main_key:str):
     key = []
     for i in range(6):
-        print(4*i,(4*i)+16)
+        # print(4*i,(4*i)+16)
         key.append(main_key[4*i:(4*i)+16])
     return key
+    # return  [ k[0:4],k[4:8], k[8:12], k[12:16], k[16:20] ]
 
 #
 def substitution(temp):
@@ -36,22 +33,29 @@ def substitution(temp):
 
 def permutation(temp):
     perm = [temp[spn_supp.pbox[i]] for i in range(16)]
-    return perm
+    return "".join(perm)
 
 def key_mixing(temp,key):
-    # k = random_4bit_string()
-    return ''.join(str(int(b1) ^ int(b2)) for b1, b2 in zip(key, temp))
+    return bm.xor(temp,key)
 
 
-def spn(msg, main_key):
+def encrypt(msg:str, main_key):
     key = key_generator(main_key)
-    print(key)
+    # print(key)
     state = msg
+    # print(int(state,2))
+
+    t = [int(i,2) for i in key]
+    # print(t)
     for i in range(3):
-        print("Level : ", i+1, end=" \t ")
+        # print("Level : ", i+1, end=" \t ")
         state = key_mixing(state,key[i])
+        # print(int(state,2))
         state = substitution(state)
+        # print(int(state,2))
         state = permutation(state)
+        # print(int(state,2))
+
     state = key_mixing(state, key[4])
     state = substitution(state)
     state = key_mixing(state,key[5])
