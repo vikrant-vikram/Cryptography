@@ -8,7 +8,7 @@ For supplementary material, check out this [guide](https://ioactive.com/wp-conte
 ---
 
 <div align="center">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/AES_%28Rijndael%29_Round_Function.png/500px-AES_%28Rijndael%29_Round_Function.png" height="500" />
+  <img src="https://preview.redd.it/91gi221gxtc81.png?width=712&format=png&auto=webp&s=1a67c63376b7c5cdca1e9ef6fd7c2820ffd0ba89" height="500" />
 </div>
 
 ---
@@ -107,16 +107,3 @@ Pr[X1 ^ X2 ^ ... ^ Xn = 0] = ½ + 2^(n-1) Σ (from i=1 to n) Ci
 The Piling-Up Lemma is valid only when the random variables are independent.
 
 ---
-
-## Contributions
-
-This repository provides the code to execute linear cryptanalysis on the SPN cipher, analyze S-box biases, and construct Linear Approximation Tables (LAT). You can experiment with different configurations of the cipher and cryptanalysis parameters.
-
----
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-```
-
-This version consolidates all the information in one cohesive section, maintaining clarity and structure throughout. It includes all necessary details on how to run the analysis, an explanation of the SPN encryption process, how linear approximations are constructed, and the Piling-Up Lemma used for bias calculation.
