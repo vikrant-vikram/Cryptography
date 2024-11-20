@@ -78,3 +78,53 @@ def int_to_8bit_binary(num):
 
     # Pad the binary string to be 16 bits long
     return bin_str.zfill(8)
+
+
+# def hex_to_binary(hex_string):
+#     return bin(int(hex_string, 16))[2:]
+
+
+def hex_to_binary(hex_string):
+    """
+    Converts a hexadecimal string to its binary representation.
+
+    Args:
+        hex_string (str): The input hexadecimal string.
+
+    Returns:
+        str: The binary representation of the hexadecimal string.
+    """
+    try:
+        # Remove any leading "0x" if present
+        if hex_string.startswith("0x"):
+            hex_string = hex_string[2:]
+        # Convert each hex digit to its binary equivalent
+        binary_string = bin(int(hex_string, 16))[2:]  # Convert hex to binary and remove "0b"
+        # Pad the binary string to ensure it's a multiple of 4 bits
+        padded_binary = binary_string.zfill(len(hex_string) * 4)
+        return padded_binary
+    except ValueError:
+       return "Invalid hexadecimal input"
+
+
+def hex_to_binary_16bit(hex_string):
+    """
+    Converts a hexadecimal string to a 16-bit binary representation.
+
+    Args:
+        hex_string (str): The input hexadecimal string.
+
+    Returns:
+        str: A 16-bit binary representation of the hexadecimal string.
+    """
+    try:
+        # Remove any leading "0x" if present
+        if hex_string.startswith("0x"):
+            hex_string = hex_string[2:]
+        # Convert hex to an integer and then to binary, removing "0b"
+        binary_string = bin(int(hex_string, 16))[2:]
+        # Ensure the binary string is exactly 16 bits long
+        padded_binary = binary_string.zfill(8)
+        return padded_binary
+    except ValueError:
+        return "Invalid hexadecimal input"

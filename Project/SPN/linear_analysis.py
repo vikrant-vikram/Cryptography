@@ -1,84 +1,3 @@
-# import spn as cipher
-# import itertools as it
-# import collections
-# from math import fabs
-# from lat import lat
-# import basic_methods as bm
-
-
-# from spn_supplymentary import sbox_inv
-# probBias = lat()
-# for row in probBias:
-#     print(' '.join([f'{(bia - 8):02d}' for bia in row]))
-
-
-
-
-
-# defaultmsg = list('0010011010110111')
-# # key = '101110001010101101110101011001000101101101'
-
-# # key = "000000000000000000000000000001000000"
-# # k = cipher.key_generator(key)  # Assuming key_generator outputs a list of subkeys
-# key = bm.random_36bit_string()
-# # Key analysis (focus on the last 16 bits of the key)
-# k = cipher.key_generator(key)
-# k_5 = k[-1] # Last 16 bits of the key
-# k_5_5_8 = k_5[4:8]  # Bits 5 to 8 of K5
-# k_5_13_16 = k_5[12:16]  # Bits 13 to 16 of K5
-
-# print(f'\nTest key k = {k}')
-# print(f'(k_5 = {k_5})')
-# print(f'Target subkey K_5,5...k_5,8 = {k_5_5_8}')
-# print(f'Target subkey K_5,13...k_5,16 ={k_5_13_16}')
-
-# # Linear cryptanalysis: test each possible target subkey
-# countTargetBias = [0] * 256  # Count of matching approximations for each subkey value
-
-# # Test 10,000 random plaintexts
-# for pt in range(10000):
-#     temp = bm.int_to_16bit_binary(pt)
-#     ct = cipher.encrypt(temp, key)  # Encrypt plaintext with the key
-
-#     ct_5_8 = ct[4:8]
-#     ct_13_16 = ct[12:16]
-
-#     # Test each possible target subkey (0 to 255)
-#     for target in range(256):
-#         temp = bm.int_to_16bit_binary(target)
-#         target_5_8 = temp[4:8]
-#         target_13_16 = temp[12:16]
-
-#         # Calculate the linear approximation
-#         # v_5_8 = ct_5_8 ^ target_5_8
-#         v_5_8 = bm.xor(ct_5_8 , target_5_8)
-#         # v_13_16 = ct_13_16 ^ target_13_16
-#         v_13_16 = bm.xor(ct_13_16 , target_13_16)
-#         # print(int(v_5_8, 2) , int(v_13_16, 2))
-#         u_5_8, u_13_16 = sbox_inv[int(v_5_8, 2)], sbox_inv[int(v_13_16, 2)]
-
-#         # Linear approximation equation
-#         lApprox = ((u_5_8 >> 2) & 0b1) ^ (u_5_8 & 0b1) ^ ((u_13_16 >> 2) & 0b1) ^ (u_13_16 & 0b1) \
-#                   ^ ((pt >> 11) & 0b1) ^ ((pt >> 9) & 0b1) ^ ((pt >> 8) & 0b1)
-
-#         # If approximation equals 0, it is a match
-#         if lApprox == 0:
-#             countTargetBias[target] += 1
-
-# # Calculate bias for each target subkey
-# bias = [fabs(count - 5000.0) / 10000.0 for count in countTargetBias]
-
-# # Find the subkey with the highest bias
-# maxResult, maxIdx = max((val, idx) for idx, val in enumerate(bias))
-
-# print(f'Highest bias is {maxResult} for subkey value {hex(maxIdx)}.')
-
-# # Check if the best match corresponds to the expected subkey
-# if (maxIdx >> 4) & 0b1111 == k_5_5_8 and maxIdx & 0b1111 == k_5_13_16:
-#     print('Success! The key was recovered.')
-# else:
-#     print('Failure. The key was not recovered.')
-
 
 import spn as cipher
 import itertools as it
@@ -86,78 +5,101 @@ import collections
 from math import fabs
 from lat import lat
 import basic_methods as bm
-from spn_supplymentary import sbox_inv
+from express import express
+from spn_supplymentary import sbox_inv, sbox_inv1
 
-# Linear Approximation Table (LAT) bias
-probBias = lat()
-for row in probBias:
-    print(' '.join([f'{(bia - 8):02d}' for bia in row]))
+# ANSI color codes
+RESET = "\033[0m"
+RED = "\033[31m"
+GREEN = "\033[32m"
+YELLOW = "\033[33m"
+BLUE = "\033[34m"
+CYAN = "\033[36m"
 
-# Default message and key (adjusted to 36 bits for now)
-defaultmsg = list('0010011010110111')  # 16-bit binary message
-key = bm.random_36bit_string()  # 36-bit key
-# Key analysis (focus on the last 16 bits of the key)
-k = cipher.key_generator(key)  # Assuming key_generator outputs a list of subkeys
+# Display the probability bias table for analysis
+def linear_cryptanalysis(plaintext, key):
+    """
+    Performs linear cryptanalysis on the given plaintext and key.
 
-# Last 16 bits (assuming k is already 16 bits long)
-k_5 = k[-1]  # Last 16 bits of the key
-k_5_5_8 = k_5[4:8]  # Bits 5 to 8 of K5
-k_5_13_16 = k_5[12:16]  # Bits 13 to 16 of K5
-print(f'\nkey = {key}')
-print(f'\nTest key k = {k}')
-print(f'(k_5 = {k_5})')
-print(f'Target subkey K_5,5...k_5,8 = {k_5_5_8}')
-print(f'Target subkey K_5,13...k_5,16 = {k_5_13_16}')
+    Parameters:
+    plaintext (str): The input plaintext (binary string).
+    key (str): The encryption key (binary string).
 
-# Linear cryptanalysis: test each possible target subkey
-countTargetBias = [0] * 256  # Count of matching approximations for each subkey value
+    Returns:
+    None: Prints the analysis results, including the estimated subkey.
+    """
+    # Default values for plaintext and key if none provided
+    lat()
 
+    if not plaintext:
+        plaintext = list('0010011010110111')  # Example default plaintext
+    if not key:
+        key = bm.random_36bit_string()  # Generate a random 36-bit key
 
-# Test 10,000 random plaintexts
-for pt in range(10000):
-    temp = bm.int_to_16bit_binary(pt)  # Convert pt to 16-bit binary string
-    ct = cipher.encrypt(temp, key)  # Encrypt plaintext with the key
+    # Generate round keys using the cipher's key scheduling function
+    round_keys = cipher.key_generator(key)
 
-    # Extract relevant bits from ciphertext
-    ct_5_8 = ct[4:8]
-    ct_13_16 = ct[12:16]
+    # Analyze the fifth-round key
+    fifth_round_key = round_keys[-1]  # Last 16 bits of the key
+    key_segment_5_to_8 = fifth_round_key[4:8]  # Bits 5 to 8 of the fifth-round key
+    key_segment_13_to_16 = fifth_round_key[12:16]  # Bits 13 to 16 of the fifth-round key
 
-    # Test each possible target subkey (0 to 255)
-    for target in range(256):
-        target_bin = bm.int_to_8bit_binary(target)
-        target_5_8 = target_bin[0:4]
-        target_13_16 = target_bin[4:8]
+    # Print key information for debugging
+    print(f'\n{CYAN}Encryption key: {key}{RESET}')
+    print(f'{BLUE}Fifth-round key: {fifth_round_key}{RESET}')
+    print(f'{GREEN}Segment K5[5:8]: {key_segment_5_to_8}{RESET}')
+    print(f'{YELLOW}Segment K5[13:16]: {key_segment_13_to_16}{RESET}')
 
-        # XOR operation between ciphertext and target subkey bits
-        v_5_8 = bm.xor(ct_5_8, target_5_8)
-        v_13_16 = bm.xor(ct_13_16, target_13_16)
+    # Initialize an array to count biases for each potential subkey
+    subkey_bias_counts = [0] * 256  # 256 possible subkey values (8 bits)
 
-        u_5_8, u_13_16 = sbox_inv[int(v_5_8, 2)], sbox_inv[int(v_13_16, 2)]
-        # print(u_5_8, u_13_16)
-        # Linear approximation equation
-        # lApprox = ((u_5_8 >> 2) & 0b1) ^ (u_5_8 & 0b1) ^ ((u_13_16 >> 2) & 0b1) ^ (u_13_16 & 0b1) \
-        #           ^ ((pt >> 11) & 0b1) ^ ((pt >> 9) & 0b1) ^ ((pt >> 8) & 0b1)
+    # Test on 10,000 random plaintexts
+    for plaintext_int in range(10000):
+        # Convert plaintext integer to a 16-bit binary string
+        binary_plaintext = bm.int_to_16bit_binary(plaintext_int)
 
-        lApprox = int(u_5_8[1]) + int(u_5_8[-1]) + int(u_13_16[1]) + int(u_13_16[-1]) + int(temp[4]) + int(temp[6]) + int(temp[7])
+        # Encrypt the plaintext and convert the ciphertext to an integer
+        ciphertext = int(cipher.encrypt(binary_plaintext, key), 2)
 
+        # Extract bits 5 to 8 and 13 to 16 from the ciphertext
+        ciphertext_segment_5_to_8 = (ciphertext >> 8) & 0b1111
+        ciphertext_segment_13_to_16 = ciphertext & 0b1111
 
-        # If approximation equals 0, it is a match
-        if (lApprox%2== 0):
-            # print("dddd")
-            countTargetBias[target] += 1
+        # Test all possible subkey values
+        for subkey_candidate in range(256):
+            subkey_candidate_5_to_8 = (subkey_candidate >> 4) & 0b1111
+            subkey_candidate_13_to_16 = subkey_candidate & 0b1111
 
-# Calculate bias for each target subkey
-bias = [fabs(count - 5000.0) / 10000.0 for count in countTargetBias]
+            # Perform XOR between ciphertext and subkey candidates
+            xor_5_to_8 = ciphertext_segment_5_to_8 ^ subkey_candidate_5_to_8
+            xor_13_to_16 = ciphertext_segment_13_to_16 ^ subkey_candidate_13_to_16
 
-# Find the subkey with the highest bias
-print(bias)
-maxResult, maxIdx = max((val, idx) for idx, val in enumerate(bias))
-temp = bm.int_to_8bit_binary(maxIdx)
-print(temp)
-print(f'Highest bias is {maxResult} for subkey value {hex(maxIdx)}.')
+            # Apply the inverse S-Box to the XOR results
+            inv_sbox_output_5_to_8 = sbox_inv1[xor_5_to_8]
+            inv_sbox_output_13_to_16 = sbox_inv1[xor_13_to_16]
 
-# Check if the best match corresponds to the expected subkey
-if (maxIdx >> 4) & 0b1111 == k_5_5_8 and maxIdx & 0b1111 == k_5_13_16:
-    print('Success! The key was recovered.')
-else:
-    print('Failure. The key was not recovered.')
+            # Evaluate the linear approximation for the given plaintext
+            linear_approximation = express(inv_sbox_output_5_to_8, inv_sbox_output_13_to_16, plaintext_int)
+            if linear_approximation == 0:
+                subkey_bias_counts[subkey_candidate] += 1
+
+    # Calculate biases for each subkey candidate
+    biases = [abs(count - 5000.0) / 10000.0 for count in subkey_bias_counts]
+    highest_bias, best_subkey = max(biases), biases.index(max(biases))
+
+    # Convert the best subkey candidate to a 16-bit binary string
+    estimated_subkey = bm.hex_to_binary_16bit(hex(best_subkey))
+
+    # Print the results
+    get_top_ten = lambda lst: sorted(enumerate(lst), key=lambda x: x[1], reverse=True)[:10]
+    top_ten = get_top_ten(biases)
+    print("Top 10 Candidate keys:")
+    for index, value in top_ten:
+        print(f"key: {bm.hex_to_binary_16bit(hex(index))}, bias: {value}")
+
+    print(f'{RED}Highest bias: {highest_bias}{RESET}')
+    print(f'{CYAN}Estimated subkey value: {estimated_subkey}{RESET}')
+    if (key_segment_5_to_8 + key_segment_13_to_16) == estimated_subkey:
+        print(f'{GREEN}The estimated subkey is correct!{RESET}')
+    else:
+        print(f'{RED}The estimated subkey is incorrect!{RESET}')
